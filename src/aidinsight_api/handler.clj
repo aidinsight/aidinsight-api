@@ -23,6 +23,9 @@
 
 (def cluster-names ["food" "health" "protection"])
 
+(s/defschema NeedMessage
+  {:message String})
+
 (s/defschema CreateNeedRequest
   {:message String
    :mobile String
@@ -66,11 +69,11 @@
 
       (POST "/need/categorize" []
         :return MatchingClusters
-        :body [body {:next String}]
+        :body [body NeedMessage]
         :summary "categorizes a request for help"
-        (ok {:clusters (categorize (-> body :text))}))
+        (ok {:clusters (categorize (-> body :message))}))
 
-      (POST "/need/request" []
+      (POST "/need" []
         :return ReadNeedRequest
         :body [body CreateNeedRequest]
         :summary "submit a need request"
