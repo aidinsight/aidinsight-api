@@ -6,7 +6,7 @@ FIXME
 
 ### Run the application locally
 
-`lein run`
+`lein run config.edn`
 
 ### Packaging and running as standalone jar
 
