@@ -4,16 +4,40 @@
             [schema.core :as s]))
 
 
+;;
+;; Schemas
+;;
+
 (s/defschema ClusterMatch
   {:name s/Str
    :confidence s/Str})
 
+(s/defschema MatchingClusters
+  {:clusters [ClusterMatch]})
+
+(s/defschema ClusterNames
+  {:clusters [String]})
 
 (s/defschema MatchingClusters
   {:clusters [ClusterMatch]})
 
+(def cluster-names ["food" "health" "protection"])
+
+(s/defschema CreateNeedRequest
+  {:message String
+   :mobile String
+   :destination-clusters [(apply s/enum cluster-names)]
+   (s/optional-key :originator-name) String
+   (s/optional-key :location) {:lat Number :long Number}})
+
+(s/defschema ReadNeedRequest
+  (assoc CreateNeedRequest :id String))
+
+;;
+
 (defn cluster-match [name confidence]
   {:name name :confidence (str confidence)})
+
 
 (defn categorize [text]
   (let [food-match (re-find #"food" text)
@@ -23,6 +47,10 @@
             food-match (conj (cluster-match "food" "0.88"))
             health-match (conj (cluster-match "health" "0.84"))
             protection-match (conj (cluster-match "protection" "0.76")))))
+
+
+(defn uuid [] (.toString (java.util.UUID/randomUUID)))
+
 
 (def app
   (api
@@ -36,8 +64,19 @@
     (context "/api" []
       :tags ["api"]
 
-      (POST "/categorize" []
+      (POST "/need/categorize" []
         :return MatchingClusters
-        :body [body {:text String}]
-        :summary "categorizes a message for help"
-        (ok {:clusters (categorize (-> body :text))})))))
+        :body [body {:next String}]
+        :summary "categorizes a request for help"
+        (ok {:clusters (categorize (-> body :text))}))
+
+      (POST "/need/request" []
+        :return ReadNeedRequest
+        :body [body CreateNeedRequest]
+        :summary "submit a need request"
+        (ok (assoc body :id (uuid))))
+
+      (GET "/clusters" []
+        :return ClusterNames
+        :summary "return recognized cluster names"
+        (ok {:clusters cluster-names})))))
