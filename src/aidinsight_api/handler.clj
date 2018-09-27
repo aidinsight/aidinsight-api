@@ -1,7 +1,8 @@
 (ns aidinsight-api.handler
   (:require [compojure.api.sweet :refer :all]
             [ring.util.http-response :refer :all]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [aidinsight-api.discourse :as discourse]))
 
 
 ;;
@@ -9,7 +10,7 @@
 ;;
 
 (s/defschema ClusterMatch
-  {:name s/Str
+  {:name       s/Str
    :confidence s/Str})
 
 (s/defschema MatchingClusters
@@ -27,11 +28,12 @@
   {:message String})
 
 (s/defschema CreateNeedRequest
-  {:message String
-   :mobile String
-   :destination-clusters [(apply s/enum cluster-names)]
+  {:title                            String
+   :description                      String
+   :mobile                           String
+   (s/optional-key :clusters)        [(apply s/enum cluster-names)]
    (s/optional-key :originator-name) String
-   (s/optional-key :location) {:lat Number :long Number}})
+   (s/optional-key :location)        {:lat Number :long Number}})
 
 (s/defschema ReadNeedRequest
   (assoc CreateNeedRequest :id String))
@@ -55,12 +57,12 @@
 (defn uuid [] (.toString (java.util.UUID/randomUUID)))
 
 
-(def app
+(defn app [config]
   (api
     {:swagger
-     {:ui "/"
+     {:ui   "/"
       :spec "/swagger.json"
-      :data {:info {:title "Aid inSight API"
+      :data {:info {:title       "Aid inSight API"
                     :description "APIs to support humanitarian relief coordination"}
              :tags [{:name "api", :description "Aid inSight APIs"}]}}}
 
@@ -77,7 +79,13 @@
         :return ReadNeedRequest
         :body [body CreateNeedRequest]
         :summary "submit a need request"
-        (ok (assoc body :id (uuid))))
+        (do
+          (discourse/send-need-request
+            (:discourse config)
+            (body :title)
+            (body :description)
+            (body :clusters))
+          (created)))
 
       (GET "/clusters" []
         :return ClusterNames

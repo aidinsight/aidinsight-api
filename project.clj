@@ -3,7 +3,9 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [metosin/compojure-api "1.1.11"]
                  [ring/ring-jetty-adapter "1.7.0"]
-                 [environ "1.1.0"]]
+                 [environ "1.1.0"]
+                 [clj-http "3.9.1"]
+                 [cheshire "5.8.1"]]
   :ring {:handler aidinsight-api.handler/app}
   :uberjar-name "server.jar"
   :profiles {:dev {:dependencies [[javax.servlet/javax.servlet-api "3.1.0"]]
