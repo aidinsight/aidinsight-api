@@ -5,10 +5,11 @@
 
 (def base-url "https://discourse.aidinsight.network")
 
-(defn- build-message [{:keys [description mobile clusters location]}]
+(defn- build-message [{:keys [description mobile clusters contact-name location]}]
   (let [message (str
                   description "\n"
-                  (if (location :name) (str "Location: " (location :name) "\n") "")
+                  (if contact-name (str "Contact: " contact-name "\n") "")
+                  (if (and location (location :name)) (str "Location: " (location :name) "\n") "")
                   (if mobile (str "Mobile: " mobile "\n") ""))]
     (if (seq clusters)
       (let [cluster-tags (map #(str "@" %) clusters)]

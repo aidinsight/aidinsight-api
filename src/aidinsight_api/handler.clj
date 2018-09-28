@@ -41,7 +41,7 @@
    :description                      String
    (s/optional-key :mobile)          String
    (s/optional-key :clusters)        [(apply s/enum cluster-names)]
-   (s/optional-key :originator-name) String
+   (s/optional-key :contact-name) String
    (s/optional-key :location)        NeedLocation})
 
 (s/defschema ReadNeedRequest
