@@ -3,7 +3,8 @@
             [ring.util.http-response :refer :all]
             [schema.core :as s]
             [aidinsight-api.discourse :as discourse]
-            [aidinsight-api.watson :as watson]))
+            [aidinsight-api.watson :as watson])
+  (:import (javax.xml.stream Location)))
 
 
 ;;
@@ -31,13 +32,17 @@
 (s/defschema NeedMessage
   {:message String})
 
+(s/defschema NeedLocation
+  {:name                 String
+   (s/optional-key :gps) {:lat Number :long Number}})
+
 (s/defschema CreateNeedRequest
   {:title                            String
    :description                      String
-   :mobile                           String
+   (s/optional-key :mobile)          String
    (s/optional-key :clusters)        [(apply s/enum cluster-names)]
    (s/optional-key :originator-name) String
-   (s/optional-key :location)        {:lat Number :long Number}})
+   (s/optional-key :location)        NeedLocation})
 
 (s/defschema ReadNeedRequest
   (assoc CreateNeedRequest :id String))
@@ -95,14 +100,12 @@
 
       (POST "/need" []
         :return ReadNeedRequest
-        :body [body CreateNeedRequest]
+        :body [need-request CreateNeedRequest]
         :summary "submit a need request"
         (do
           (discourse/send-need-request
             (:discourse config)
-            (body :title)
-            (body :description)
-            (body :clusters))
+            need-request)
           (created)))
 
       (GET "/clusters" []

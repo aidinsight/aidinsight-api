@@ -3,15 +3,19 @@
             [clojure.string :as str]
             [cheshire.core :as ch]])
 
-(def ^:private need-request-topic-id 15)
-
 (def base-url "https://discourse.aidinsight.network")
 
-(defn- build-message [message clusters]
-  (if (seq clusters)
-    (let [cluster-tags (map #(str "@" %) clusters)]
-      (str message " " (str/join " " cluster-tags)))
-    message))
+(defn- build-message [{:keys [description mobile clusters location]}]
+  (let [message (str
+                  description "\n"
+                  (if (location :name) (str "Location: " (location :name) "\n") "")
+                  (if mobile (str "Mobile: " mobile "\n") ""))]
+    (if (seq clusters)
+      (let [cluster-tags (map #(str "@" %) clusters)]
+        (str
+          message
+          (str/join " " cluster-tags)))
+      message)))
 
 (defn- with-parsed-body [response]
   (if (some #{(response :status)} [200])
@@ -30,7 +34,7 @@
        first
        :id))
 
-(defn send-need-request [config title description clusters]
+(defn send-need-request [config {:keys [title description clusters] :as params}]
   (println "config" config "title" title "description" description "clusters" clusters)
   (let [categories (-> (list-categories config) :body :category_list :categories)]
     (-> (http/post
@@ -38,7 +42,7 @@
           {:headers          {"Content-Type" "multipart/form-data"}
            :form-params      {:category     (category-slug->id "need-requests" categories)
                               :title        (str title ": " description)
-                              :raw          (build-message description clusters)
+                              :raw          (build-message params)
                               :api_key      (config :api-key)
                               :api_username "system"}
            :throw-exceptions false})
