@@ -2,27 +2,31 @@
   (:require [compojure.api.sweet :refer :all]
             [ring.util.http-response :refer :all]
             [schema.core :as s]
-            [aidinsight-api.discourse :as discourse]))
+            [aidinsight-api.discourse :as discourse]
+            [aidinsight-api.watson :as watson]))
 
 
 ;;
 ;; Schemas
 ;;
 
-(s/defschema ClusterMatch
-  {:name       s/Str
-   :confidence s/Str})
-
-(s/defschema MatchingClusters
-  {:clusters [ClusterMatch]})
-
 (s/defschema ClusterNames
   {:clusters [String]})
 
 (s/defschema MatchingClusters
-  {:clusters [ClusterMatch]})
+  {:clusters [String]})
 
-(def cluster-names ["food" "health" "protection"])
+(def cluster-names ["water-sanitation"
+                    "coordination"
+                    "health"
+                    "nutrition"
+                    "shelter"
+                    "food-security"
+                    "education"
+                    "protection"
+                    "logistics"
+                    "emergency-telecommunications"])
+
 
 (s/defschema NeedMessage
   {:message String})
@@ -43,8 +47,7 @@
 (defn cluster-match [name confidence]
   {:name name :confidence (str confidence)})
 
-
-(defn categorize [text]
+(defn regex-classify [text]
   (let [food-match (re-find #"food" text)
         health-match (re-find #"sick" text)
         protection-match (re-find #"gun" text)]
@@ -53,8 +56,23 @@
             health-match (conj (cluster-match "health" "0.84"))
             protection-match (conj (cluster-match "protection" "0.76")))))
 
+(defn categorize [config text]
+  (println "TEXT" text)
+  (if (:watson config)
+    (do
+      (println "Using Watson classifier")
+      (mapv name (watson/identify-clusters (:watson config) text)))
+    (do
+      (println "Using regex classifier")
+      (regex-classify text))))
+
 
 (defn uuid [] (.toString (java.util.UUID/randomUUID)))
+
+
+(defn debug-> [x message]
+  (println message x)
+  x)
 
 
 (defn app [config]
@@ -73,7 +91,7 @@
         :return MatchingClusters
         :body [body NeedMessage]
         :summary "categorizes a request for help"
-        (ok {:clusters (categorize (-> body :message))}))
+        (ok {:clusters (debug-> (categorize config (-> body :message)) "categories")}))
 
       (POST "/need" []
         :return ReadNeedRequest
