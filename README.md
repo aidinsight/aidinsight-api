@@ -1,32 +1,26 @@
 # aidinsight-api
 
-FIXME
+Aid inSight API for coordination of humanitarian relief.
 
 ## Usage
 
-### Run the application locally
-
-`lein run config.edn`
-
-### Packaging and running as standalone jar
-
-```
-lein do clean, ring uberjar
-java -jar target/server.jar
-```
-
-### Packaging as war
-
-`lein ring uberwar`
-
 ### Opening ports
+
+By default, the server runs on port 8080. To change this, set the PORT environment variable.
 
 When running on port 8080, ensure the firewall is configured correctly:
 
-sudo ufw allow 8080/tcp
+(Ubuntu)
+```sudo ufw allow 8080/tcp```
 
-https://serverfault.com/questions/238563/can-i-use-ufw-to-setup-a-port-forward
+### Run the application locally
+
+```lein run config.edn```
+
+Browse to port 8080.
 
 ## License
 
-Copyright ©  FIXME
+Copyright © 2018 Andrew Whitehouse
+
+Distributed under the Apache 2.0 License https://www.apache.org/licenses/LICENSE-2.0
