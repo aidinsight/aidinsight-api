@@ -4,6 +4,17 @@ Aid inSight API for coordination of humanitarian relief.
 
 ## Usage
 
+### Configuration
+
+Copy template-config.edn to config.edn and populate the values.
+
+For the Natural Language Classifier, visit https://console.bluemix.net/dashboard/apps and find your 
+natural language classifier instance. Selecting that will give access to your credentials.
+
+Contact your Discourse admin to request the API key.
+
+(Note: for the Call for Code submission, configuration details will be provided separately.)
+
 ### Opening ports
 
 By default, the server runs on port 8080. To change this, set the PORT environment variable.
